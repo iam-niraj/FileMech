@@ -1,0 +1,10 @@
+{
+    "manifest_version": 3,
+    "name": "File-Mech Chrome Extension",
+    "version": "1.0.0",
+    "description": "A powerful chat tool to operate on files.",
+    "action": {
+      "default_popup": "index.html"
+    },
+    "permissions": []
+  }
