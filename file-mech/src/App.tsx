@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect, ChangeEvent, KeyboardEvent } from "react";
 import {
-  Send,
-  Paperclip,
   X,
   Loader,
   FileText,
@@ -9,6 +7,7 @@ import {
   FileSearch,
   ArrowDown,
 } from "lucide-react";
+import InputArea from "./Components/InputArea";
 
 interface ChatMessage {
   id: number;
@@ -40,11 +39,9 @@ export default function ChatAssistant() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Track if scrolling should be enabled
-  const shouldEnableScroll = messages.length > 3;
+  // const shouldEnableScroll = messages.length > 3;
 
   const handleSend = () => {
     if (!input.trim() && files.length === 0) return;
@@ -60,11 +57,6 @@ export default function ChatAssistant() {
     setMessages((prev) => [...prev, newMessage]);
     setInput("");
     setFiles([]);
-
-    // Reset textarea height
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
 
     // Simulate assistant response
     setIsLoading(true);
@@ -96,14 +88,6 @@ export default function ChatAssistant() {
       handleSend();
     }
   };
-
-  // Auto-adjust textarea height
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [input]);
 
   // Check if at bottom of chat when scrolling
   const checkIfScrollAtBottom = () => {
@@ -148,27 +132,27 @@ export default function ChatAssistant() {
 
   // Set width styles based on environment
   const containerStyle = {
-    width: isExtension ? "450px" : "100%", // Increased from 400px to 450px
-    minWidth: isExtension ? "450px" : "320px", // Increased from 400px to 450px and 300px to 320px
-    maxWidth: isExtension ? "450px" : "md", // Increased from 400px to 450px
+    width: isExtension ? "450px" : "100%",
+    minWidth: isExtension ? "450px" : "320px",
+    maxWidth: isExtension ? "450px" : "md",
+    height: isExtension ? "600px" : "100vh", // Fixed height based on environment
+    display: "flex",
+    flexDirection: "column" as const, // TypeScript requires this explicit type
   };
 
   return (
-    <div
-      className="flex flex-col h-full min-h-[480px] max-h-[650px] mx-auto bg-gray-50 shadow-md overflow-hidden"
-      style={containerStyle}
-    >
+    <div className="bg-gray-50 shadow-md mx-auto" style={containerStyle}>
       {/* Header */}
-      <div className="bg-indigo-600 text-white p-3 text-center font-medium shadow-sm">
+      <div className="bg-indigo-600 text-white p-3 text-center font-medium shadow-sm flex-shrink-0">
         Mini Assistant
       </div>
 
-      {/* Chat Messages - Fixed height container with dynamic visibility of scrollbar */}
+      {/* Chat Messages - Fixed height container with scrollbar */}
       <div
         ref={chatContainerRef}
         className="flex-1 p-3 overflow-y-auto relative scroll-smooth"
         style={{
-          minHeight: shouldEnableScroll ? "200px" : "auto",
+          minHeight: "0", // This is crucial to make flex child scrollable
         }}
         onScroll={checkIfScrollAtBottom}
       >
@@ -260,7 +244,7 @@ export default function ChatAssistant() {
       )}
 
       {/* Feature cards - above the text input */}
-      <div className="px-3 pt-3 pb-1">
+      <div className="px-3 pt-3 pb-1 flex-shrink-0">
         <div className="text-xs text-gray-500 mb-2">
           Need ideas? Try asking:
         </div>
@@ -288,7 +272,7 @@ export default function ChatAssistant() {
 
       {/* File preview area */}
       {files.length > 0 && (
-        <div className="px-3 py-2 bg-gray-100 border-t border-gray-200">
+        <div className="px-3 py-2 bg-gray-100 border-t border-gray-200 flex-shrink-0">
           <div className="flex flex-wrap gap-2">
             {files.map((file, index) => (
               <div
@@ -309,48 +293,16 @@ export default function ChatAssistant() {
         </div>
       )}
 
-      {/* Input area */}
-      <div className="p-3 bg-white border-t border-gray-200">
-        <div className="flex items-end gap-2">
-          <div className="flex-1">
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyPress}
-              placeholder="Ask something..."
-              className="w-full rounded-lg border border-gray-300 p-2 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm resize-none min-h-[40px] max-h-[120px]"
-              rows={1}
-            />
-          </div>
-
-          <div className="flex gap-1">
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="p-2 rounded-full hover:bg-gray-100 text-gray-600"
-              aria-label="Upload files"
-            >
-              <Paperclip size={18} />
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                className="hidden"
-                multiple
-                aria-label="File upload"
-              />
-            </button>
-
-            <button
-              onClick={handleSend}
-              className="p-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition-colors disabled:bg-indigo-400"
-              aria-label="Send message"
-              disabled={!input.trim() && files.length === 0}
-            >
-              <Send size={18} />
-            </button>
-          </div>
-        </div>
+      {/* Input area with increased padding */}
+      <div className="px-3 pb-3 pt-2 flex-shrink-0">
+        <InputArea
+          input={input}
+          setInput={setInput}
+          handleKeyPress={handleKeyPress}
+          handleSend={handleSend}
+          handleFileChange={handleFileChange}
+          files={files}
+        />
       </div>
     </div>
   );
